@@ -104,6 +104,12 @@ functions:
           method: post
           authorizer:
             name: MyCognitoAuthorizer
+  getProducts:
+    handler: handlers/getApprovedProducts.getProducts
+    events:
+      - httpApi:
+          path: /products
+          method: get
   updateProductData:
     handler: handlers/updateProductData.updateProductData
     events:
@@ -111,3 +117,9 @@ functions:
           bucket: !Ref ProductImagesBucket
           event: s3:ObjectCreated:Put
           existing: true # This allows the function to be triggered by an existing object in the bucket
+  cleanUpProducts:
+    handler: eventBridgeHandlers/cleanupProducts.cleanupProducts
+    events: # This function will be triggered in every 2 minutes and will delete all Products that are older 1 hour
+      - schedule:
+          rate: rate(2 minutes)
+          enabled: true # This enables the scheduled event
