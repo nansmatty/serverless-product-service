@@ -12,7 +12,8 @@ provider:
       CognitoAuthorizer:
         identitySource: $request.header.Authorization
         issuerUrl: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/ap-southeast-1_LjeywfNgL
-        audience: ${ssm:/CLIENT_ID}
+        audience:
+          - ${ssm:/CLIENT_ID}
   environment:
     PRODUCTS_TABLE: !Ref ProductTable
     REGION: ap-southeast-1'
