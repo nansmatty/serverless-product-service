@@ -16,10 +16,18 @@ exports.getUploadUrl = async (event) => {
 
 		// Comment this line in production for security reasons
 		// Checking if the event has a requestContext with authorizer claims
-		console.log(event);
+		console.log('Authorizer claims:', JSON.stringify(event.requestContext.authorizer, null, 2));
 
 		// Extract email from Cognito JWT Claims
-		const email = event.requestContext.authorizer.claims.email;
+		const email = event.requestContext.authorizer.jwt.claims.email;
+
+		// If email is not present, return a 401 Unauthorized response
+		if (!email) {
+			return {
+				statusCode: 401,
+				body: JSON.stringify({ message: 'Unauthorized! Token Error ' }),
+			};
+		}
 
 		// Parsing the incoming event body to get filename and content type
 		const { fileName, fileType, productName, productPrice, description, quantity, category } = JSON.parse(event.body);
