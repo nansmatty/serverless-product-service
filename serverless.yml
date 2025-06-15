@@ -9,9 +9,22 @@ provider:
   region: ap-southeast-1
   environment:
     PRODUCTS_TABLE: !Ref ProductTable
-    REGION: ap-southeast-1'
+    REGION: ap-southeast-1
     BUCKET_NAME: !Ref ProductImagesBucket
     CLIENT_ID: ${ssm:/CLIENT_ID}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:Scan
+        - dynamodb:DeleteItem
+        - sns:Publish
+      Resource:
+        - !Sub arn:aws:s3:::${ProductImagesBucket}/*
+        - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProductTable}
+        - !Ref ProductCleanupTopic
   httpApi:
     authorizers:
       MyCognitoAuthorizer:
@@ -70,8 +83,20 @@ resources:
               # 2. !Join [ '', ['arn:aws:s3:::', !Ref ProductImagesBucket, '/*'] ]
               Resource: !Join ['', [!GetAtt ProductImagesBucket.Arn, '/*']]
 
+    ProductCleanupTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ProductCleanupTopic
+
+    ProductCleanupSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn: !Ref ProductCleanupTopic
+        Protocol: email
+        Endpoint: narayanmaitysp@gmail.com
+
 functions:
-  hello:
+  getUploadUrl:
     handler: handlers/getUploadUrl.getUploadUrl
     events:
       - httpApi:
