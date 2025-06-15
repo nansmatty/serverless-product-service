@@ -121,5 +121,5 @@ functions:
     handler: eventBridgeHandlers/cleanupProducts.cleanupProducts
     events: # This function will be triggered in every 2 minutes and will delete all Products that are older 1 hour
       - schedule:
-          rate: rate(2 minutes)
+          rate: rate(2 hours) # This sets the schedule to every 2 hours
           enabled: true # This enables the scheduled event

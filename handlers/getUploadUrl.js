@@ -14,11 +14,18 @@ exports.getUploadUrl = async (event) => {
 		// Extracting the bucket name and key from the event object
 		const bucketName = process.env.PRODUCT_BUCKET_NAME;
 
+		// Comment this line in production for security reasons
+		// Checking if the event has a requestContext with authorizer claims
+		console.log(event);
+
+		// Extract email from Cognito JWT Claims
+		const email = event.requestContext.authorizer.claims.email;
+
 		// Parsing the incoming event body to get filename and content type
-		const { fileName, fileType, productName, productPrice, description, quantity, category, email } = JSON.parse(event.body);
+		const { fileName, fileType, productName, productPrice, description, quantity, category } = JSON.parse(event.body);
 
 		// Validating the presence of fileName and fileType
-		if (!fileName || !fileType || !productName || !productPrice || !description || !quantity || !category || !email) {
+		if (!fileName || !fileType || !productName || !productPrice || !description || !quantity || !category) {
 			return {
 				statusCode: 400,
 				body: JSON.stringify({ error: 'Missing required fields.' }),
