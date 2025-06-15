@@ -12,7 +12,7 @@ const dynamoDbClient = new DynamoDBClient({ region: process.env.REGION });
 exports.getUploadUrl = async (event) => {
 	try {
 		// Extracting the bucket name and key from the event object
-		const bucketName = process.env.BUCKET_NAME;
+		const bucketName = process.env.PRODUCT_BUCKET_NAME;
 
 		// Parsing the incoming event body to get filename and content type
 		const { fileName, fileType, productName, productPrice, description, quantity, category, email } = JSON.parse(event.body);

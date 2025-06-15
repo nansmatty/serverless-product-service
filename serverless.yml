@@ -10,7 +10,7 @@ provider:
   environment:
     PRODUCTS_TABLE: !Ref ProductTable
     REGION: ap-southeast-1
-    BUCKET_NAME: !Ref ProductImagesBucket
+    PRODUCT_BUCKET_NAME: !Ref ProductImagesBucket
     CLIENT_ID: ${ssm:/CLIENT_ID}
   iamRoleStatements:
     - Effect: Allow
@@ -104,3 +104,10 @@ functions:
           method: post
           authorizer:
             name: MyCognitoAuthorizer
+  updateProductData:
+    handler: handlers/updateProductData.updateProductData
+    events:
+      - s3:
+          bucket: !Ref ProductImagesBucket
+          event: s3:ObjectCreated:Put
+          existing: true # This allows the function to be triggered by an existing object in the bucket
