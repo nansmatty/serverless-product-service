@@ -7,18 +7,18 @@ provider:
   name: aws
   runtime: nodejs22.x
   region: ap-southeast-1
-  httpApi:
-    authorizers:
-      CognitoAuthorizer:
-        identitySource: $request.header.Authorization
-        issuerUrl: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/ap-southeast-1_LjeywfNgL
-        audience:
-          - ${ssm:/CLIENT_ID}
   environment:
     PRODUCTS_TABLE: !Ref ProductTable
     REGION: ap-southeast-1'
     BUCKET_NAME: !Ref ProductImagesBucket
     CLIENT_ID: ${ssm:/CLIENT_ID}
+  httpApi:
+    authorizers:
+      MyCognitoAuthorizer:
+        identitySource: $request.header.Authorization
+        issuerUrl: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/ap-southeast-1_LjeywfNgL
+        audience:
+          - ${ssm:/CLIENT_ID}
 
 resources:
   Resources:
@@ -68,17 +68,14 @@ resources:
               # There could be multiple ways to write !Join method some of them are:
               # 1. !Join [ '', [!GetAtt ProductImagesBucket.Arn, '/*'] ]
               # 2. !Join [ '', ['arn:aws:s3:::', !Ref ProductImagesBucket, '/*'] ]
-              Resource: !Join
-                - ''
-                - - !GetAtt ProductImagesBucket.Arn
-                  - /*
+              Resource: !Join ['', [!GetAtt ProductImagesBucket.Arn, '/*']]
 
 functions:
   hello:
-    handler: handler.hello
+    handler: handlers/getUploadUrl.getUploadUrl
     events:
       - httpApi:
-          path: /
-          method: get
+          path: /get-upload-url
+          method: post
           authorizer:
-            name: CognitoAuthorizer
+            name: MyCognitoAuthorizer
