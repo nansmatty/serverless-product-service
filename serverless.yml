@@ -6,6 +6,71 @@ service: productService
 provider:
   name: aws
   runtime: nodejs22.x
+  region: ap-southeast-1
+  httpApi:
+    authorizers:
+      CognitoAuthorizer:
+        identitySource: $request.header.Authorization
+        issuerUrl: !Sub https://cognito-idp.${AWS::Region}.amazonaws.com/ap-southeast-1_LjeywfNgL
+        audience: ${ssm:/CLIENT_ID}
+  environment:
+    PRODUCTS_TABLE: !Ref ProductTable
+    REGION: ap-southeast-1'
+    BUCKET_NAME: !Ref ProductImagesBucket
+    CLIENT_ID: ${ssm:/CLIENT_ID}
+
+resources:
+  Resources:
+    ProductTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Products
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+
+    ProductImagesBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: product-images-bucket-sls
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          IgnorePublicAcls: false
+          BlockPublicPolicy: false
+          RestrictPublicBuckets: false
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - PUT
+              AllowedOrigins:
+                - '*'
+
+    ProductImagesBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref ProductImagesBucket
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+              # This is join method to concatenate the bucket ARN with '/*' to allow access to all objects in the bucket
+              # There could be multiple ways to write !Join method some of them are:
+              # 1. !Join [ '', [!GetAtt ProductImagesBucket.Arn, '/*'] ]
+              # 2. !Join [ '', ['arn:aws:s3:::', !Ref ProductImagesBucket, '/*'] ]
+              Resource: !Join
+                - ''
+                - - !GetAtt ProductImagesBucket.Arn
+                  - /*
 
 functions:
   hello:
@@ -14,3 +79,5 @@ functions:
       - httpApi:
           path: /
           method: get
+          authorizer:
+            name: CognitoAuthorizer
